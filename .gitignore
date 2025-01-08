@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/Atlas/.vs
+/Atlas/bin
+/Atlas/obj
+/GameHelper/bin
+/GameHelper/obj
