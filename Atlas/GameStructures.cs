@@ -32,13 +32,25 @@ namespace Atlas
     public struct AtlasNode
     {
         [FieldOffset(0xD0)] public Vector2 RelativePosition;
+        [FieldOffset(0xE8)] public float Zoom;
         [FieldOffset(0x2A8)] public IntPtr NodeNameAddress;
         [FieldOffset(0x299)] public byte Flags;
-        [FieldOffset(0x29F)] public byte FlagAvailable;
+        [FieldOffset(0x29F)] public byte ByteAvailable;
 
-        public readonly bool IsAttempted => (Flags & 0x1) != 0;
-        public readonly bool IsCompleted => (Flags & 0x3) == 0x3;
-        public readonly bool IsAvailable => FlagAvailable == 0x00;
+        public readonly float Scale => Zoom / 1.5f;
+        public readonly Vector2 Position => RelativePosition * Scale;
+
+        public readonly bool IsAttempted => (Flags & 0b0000_0001) != 0;
+        public readonly bool IsPristine => (Flags & 0b0000_0010) != 0;
+        public readonly bool IsWatchTower => (Flags & 0b0000_0100) != 0;
+        public readonly bool HasCorruption => (Flags & 0b0000_1000) != 0;
+        public readonly bool HasBoss => (Flags & 0b0001_0000) != 0;
+        public readonly bool HasBreach => (Flags & 0b0010_0000) != 0;
+        public readonly bool HasExpedition => (Flags & 0b0100_0000) != 0;
+        public readonly bool HasDelirium => (Flags & 0b1000_0000) != 0;
+        public readonly bool IsCompleted => IsAttempted && IsPristine;
+        public readonly bool IsFailedAttempt => IsAttempted && !IsPristine;
+        public readonly bool IsAvailable => ByteAvailable == 0x00;
 
         public string MapName
         {

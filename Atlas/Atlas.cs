@@ -104,18 +104,18 @@ namespace Atlas
             {
                 var mapName = atlasNode.MapName;
                 if (string.IsNullOrWhiteSpace(mapName)) continue;
-                if (atlasNode.IsCompleted && Settings.HideCompletedMaps) continue;
+                if (Settings.HideCompletedMaps && (atlasNode.IsCompleted || (mapName.EndsWith("Citadel") && atlasNode.IsFailedAttempt))) continue;
 
                 var textSize = ImGui.CalcTextSize(mapName);
                 var backgroundColor = Settings.MapGroups.Find(group => group.Maps.Contains(mapName))?.BackgroundColor ?? Settings.DefaultBackgroundColor;
                 var fontColor = Settings.MapGroups.Find(group => group.Maps.Contains(mapName))?.FontColor ?? Settings.DefaultFontColor;
 
                 var padding = new Vector2(5, 2);
-                var bgPos = new Vector2(atlasNode.RelativePosition.X - padding.X, atlasNode.RelativePosition.Y - padding.Y);
+                var bgPos = new Vector2(atlasNode.Position.X - padding.X, atlasNode.Position.Y - padding.Y);
                 var bgSize = new Vector2(textSize.X + padding.X * 2, textSize.Y + padding.Y * 2);
 
                 drawList.AddRectFilled(bgPos, bgPos + bgSize, ImGuiHelper.Color(backgroundColor));
-                drawList.AddText(atlasNode.RelativePosition, ImGuiHelper.Color(fontColor), mapName);
+                drawList.AddText(atlasNode.Position, ImGuiHelper.Color(fontColor), mapName);
             }
         }
 
