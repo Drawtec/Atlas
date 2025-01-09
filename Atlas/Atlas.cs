@@ -50,6 +50,10 @@ namespace Atlas
             ImGui.SameLine();
             ImGui.Text($"Default Font Color");
 
+            ImGui.SliderFloat("##ScaleMultiplier", ref Settings.ScaleMultiplier, 0, 10.0f);
+            ImGui.SameLine();
+            ImGui.Text($"Scale Multiplier");
+
             ImGui.InputText($"##MapGroupName", ref Settings.GroupNameInput, 256);
             ImGui.SameLine();
             if (ImGui.Button("Add new map group"))
@@ -110,12 +114,13 @@ namespace Atlas
                 var backgroundColor = Settings.MapGroups.Find(group => group.Maps.Contains(mapName))?.BackgroundColor ?? Settings.DefaultBackgroundColor;
                 var fontColor = Settings.MapGroups.Find(group => group.Maps.Contains(mapName))?.FontColor ?? Settings.DefaultFontColor;
 
+                var mapPosition = atlasNode.Position * Settings.ScaleMultiplier;
                 var padding = new Vector2(5, 2);
-                var bgPos = new Vector2(atlasNode.Position.X - padding.X, atlasNode.Position.Y - padding.Y);
+                var bgPos = new Vector2(mapPosition.X - padding.X, mapPosition.Y - padding.Y);
                 var bgSize = new Vector2(textSize.X + padding.X * 2, textSize.Y + padding.Y * 2);
 
                 drawList.AddRectFilled(bgPos, bgPos + bgSize, ImGuiHelper.Color(backgroundColor));
-                drawList.AddText(atlasNode.Position, ImGuiHelper.Color(fontColor), mapName);
+                drawList.AddText(mapPosition, ImGuiHelper.Color(fontColor), mapName);
             }
         }
 
@@ -170,7 +175,7 @@ namespace Atlas
             uiElement = uiElement.GetChild(0);
             uiElement = uiElement.GetChild(6);
 
-            if (!uiElement.IsVisible) return nodes;
+            if (!uiElement.IsVisible || uiElement.FirstChild == IntPtr.Zero || uiElement.Length > 10000) return nodes;
 
             for (var i = 0; i < uiElement.Length; i++)
                 nodes.Add(uiElement.GetAtlasNode(i));

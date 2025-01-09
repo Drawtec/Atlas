@@ -9,6 +9,7 @@ namespace Atlas
         public Vector4 DefaultBackgroundColor = new(0.0f, 0.0f, 0.0f, 0.4f);
         public Vector4 DefaultFontColor = new(1.0f, 1.0f, 1.0f, 1.0f);
         public bool HideCompletedMaps = true;
+        public float ScaleMultiplier = 1.0f;
         public List<MapGroupSettings> MapGroups = [];
         public string GroupNameInput = string.Empty;
 
