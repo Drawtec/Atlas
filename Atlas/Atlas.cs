@@ -2,6 +2,7 @@ namespace Atlas
 {
     using GameHelper;
     using GameHelper.Plugin;
+    using GameHelper.RemoteObjects.Components;
     using GameHelper.Utils;
     using ImGuiNET;
     using Newtonsoft.Json;
@@ -15,6 +16,7 @@ namespace Atlas
     {
         private string SettingPathname => Path.Join(this.DllDirectory, "config", "settings.txt");
         private string NewGroupName = string.Empty;
+        private string Search = string.Empty;
 
         public override void OnDisable()
         {
@@ -39,6 +41,10 @@ namespace Atlas
 
         public override void DrawSettings()
         {
+            ImGui.InputText($"##Search", ref Search, 256);
+            ImGui.SameLine();
+            ImGui.Text($"Search");
+
             ImGui.Checkbox($"##HideCompletedMaps", ref Settings.HideCompletedMaps);
             ImGui.SameLine();
             ImGui.Text($"Hide Completed Maps");
@@ -121,8 +127,12 @@ namespace Atlas
             if (ProcessHandle == 0)
                 ProcessHandle = ProcessMemoryUtilities.Managed.NativeWrapper.OpenProcess(ProcessMemoryUtilities.Native.ProcessAccessFlags.Read, (int)Core.Process.Pid);
 
+            var player = Core.States.InGameStateObject.CurrentAreaInstance.Player;
+            if (!player.TryGetComponent<Render>(out var playerRender)) return;
+
             var drawList = ImGui.GetBackgroundDrawList();
             var atlasNodes = GetAtlasNodes();
+            var playerlocation = Core.States.InGameStateObject.CurrentWorldInstance.WorldToScreen(playerRender.WorldPosition);
 
             foreach (var atlasNode in atlasNodes)
             {
@@ -142,6 +152,9 @@ namespace Atlas
 
                 drawList.AddRectFilled(bgPos, bgPos + bgSize, ImGuiHelper.Color(backgroundColor));
                 drawList.AddText(drawPosition, ImGuiHelper.Color(fontColor), mapName);
+
+                if (!string.IsNullOrWhiteSpace(Search) && mapName.Contains(Search))
+                    drawList.AddLine(playerlocation, drawPosition, 0xFFFFFFFF);
             }
         }
 
