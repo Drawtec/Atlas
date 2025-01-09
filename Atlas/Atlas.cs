@@ -14,6 +14,7 @@ namespace Atlas
     public sealed class Atlas : PCore<AtlasSettings>
     {
         private string SettingPathname => Path.Join(this.DllDirectory, "config", "settings.txt");
+        private string NewGroupName = string.Empty;
 
         public override void OnDisable()
         {
@@ -50,7 +51,7 @@ namespace Atlas
             ImGui.SameLine();
             ImGui.Text($"Default Font Color");
 
-            ImGui.SliderFloat("##ScaleMultiplier", ref Settings.ScaleMultiplier, 0, 10.0f);
+            ImGui.SliderFloat("##ScaleMultiplier", ref Settings.ScaleMultiplier, 1.0f, 2.0f);
             ImGui.SameLine();
             ImGui.Text($"Scale Multiplier");
 
@@ -68,6 +69,16 @@ namespace Atlas
 
                 if (ImGui.CollapsingHeader($"{mapGroup.Name}##MapGroup{i}"))
                 {
+                    float buttonSize = ImGui.GetFrameHeight();
+
+                    if (TriangleButton($"##Up{i}", buttonSize, new Vector4(1, 1, 1, 1), true)) { MoveMapGroup(i, -1); }
+                    ImGui.SameLine();
+                    if (TriangleButton($"##Down{i}", buttonSize, new Vector4(1, 1, 1, 1), false)) { MoveMapGroup(i, 1); }
+                    ImGui.SameLine();
+                    if (ImGui.Button($"Rename Group##{i}")) { NewGroupName = mapGroup.Name; ImGui.OpenPopup($"RenamePopup##{i}"); }
+                    ImGui.SameLine();
+                    if (ImGui.Button($"Delete Group##{i}")) { DeleteMapGroup(i); }
+                    ImGui.SameLine();
                     ColorSwatch($"##MapGroupBackgroundColor{i}", ref mapGroup.BackgroundColor);
                     ImGui.SameLine();
                     ImGui.Text($"Background Color");
@@ -92,6 +103,15 @@ namespace Atlas
 
                     if (ImGui.Button($"Add new map##AddNewMap{i}"))
                         mapGroup.Maps.Add(string.Empty);
+
+                    if (ImGui.BeginPopupModal($"RenamePopup##{i}", ImGuiWindowFlags.AlwaysAutoResize))
+                    {
+                        ImGui.InputText("New Name", ref NewGroupName, 256);
+                        if (ImGui.Button("OK")) { mapGroup.Name = NewGroupName; ImGui.CloseCurrentPopup(); }
+                        ImGui.SameLine();
+                        if (ImGui.Button("Cancel")) ImGui.CloseCurrentPopup();
+                        ImGui.EndPopup();
+                    }
                 }
             }
         }
@@ -113,14 +133,15 @@ namespace Atlas
                 var textSize = ImGui.CalcTextSize(mapName);
                 var backgroundColor = Settings.MapGroups.Find(group => group.Maps.Contains(mapName))?.BackgroundColor ?? Settings.DefaultBackgroundColor;
                 var fontColor = Settings.MapGroups.Find(group => group.Maps.Contains(mapName))?.FontColor ?? Settings.DefaultFontColor;
+                var mapPosition = atlasNode.Position * Settings.ScaleMultiplier + new Vector2(25, 0);
 
-                var mapPosition = atlasNode.Position * Settings.ScaleMultiplier;
+                var drawPosition = mapPosition - textSize / 2;
                 var padding = new Vector2(5, 2);
-                var bgPos = new Vector2(mapPosition.X - padding.X, mapPosition.Y - padding.Y);
-                var bgSize = new Vector2(textSize.X + padding.X * 2, textSize.Y + padding.Y * 2);
+                var bgPos = drawPosition - padding;
+                var bgSize = textSize + padding * 2;
 
                 drawList.AddRectFilled(bgPos, bgPos + bgSize, ImGuiHelper.Color(backgroundColor));
-                drawList.AddText(mapPosition, ImGuiHelper.Color(fontColor), mapName);
+                drawList.AddText(drawPosition, ImGuiHelper.Color(fontColor), mapName);
             }
         }
 
@@ -141,6 +162,50 @@ namespace Atlas
                 ImGui.SameLine();
                 ImGui.Text(label);
             }
+        }
+
+        private static bool TriangleButton(string id, float buttonSize, Vector4 color, bool isUp)
+        {
+            var pressed = ImGui.Button($"{id}", new Vector2(buttonSize, buttonSize));
+            var drawList = ImGui.GetWindowDrawList();
+            var pos = ImGui.GetItemRectMin();
+            var triangleSize = buttonSize * 0.5f;
+            var center = new Vector2(pos.X + buttonSize * 0.5f, pos.Y + buttonSize * 0.5f);
+            Vector2 p1, p2, p3;
+
+            if (isUp)
+            {
+                p1 = new Vector2(center.X, center.Y - triangleSize * 0.5f);
+                p2 = new Vector2(center.X - triangleSize * 0.5f, center.Y + triangleSize * 0.5f);
+                p3 = new Vector2(center.X + triangleSize * 0.5f, center.Y + triangleSize * 0.5f);
+            }
+            else
+            {
+                p1 = new Vector2(center.X - triangleSize * 0.5f, center.Y - triangleSize * 0.5f);
+                p2 = new Vector2(center.X + triangleSize * 0.5f, center.Y - triangleSize * 0.5f);
+                p3 = new Vector2(center.X, center.Y + triangleSize * 0.5f);
+            }
+
+            drawList.AddTriangleFilled(p1, p2, p3, ImGuiHelper.Color(color));
+            return pressed;
+        }
+
+        private void MoveMapGroup(int index, int direction)
+        {
+            if (index < 0 || index >= Settings.MapGroups.Count || index + direction < 0 || index + direction >= Settings.MapGroups.Count)
+                return;
+
+            var item = Settings.MapGroups[index];
+            Settings.MapGroups.RemoveAt(index);
+            Settings.MapGroups.Insert(index + direction, item);
+        }
+
+        private void DeleteMapGroup(int index)
+        {
+            if (index < 0 || index >= Settings.MapGroups.Count)
+                return;
+
+            Settings.MapGroups.RemoveAt(index);
         }
 
         // ==================================================
@@ -166,7 +231,7 @@ namespace Atlas
             return Encoding.Unicode.GetString(result).Split('\0')[0];
         }
 
-        private IEnumerable<AtlasNode> GetAtlasNodes()
+        private static List<AtlasNode> GetAtlasNodes()
         {
             var nodes = new List<AtlasNode>();
 
