@@ -8,8 +8,10 @@ namespace Atlas
     using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Numerics;
+    using System.Runtime.InteropServices;
     using System.Text;
 
     public sealed class Atlas : PCore<AtlasSettings>
@@ -124,6 +126,9 @@ namespace Atlas
 
         public override void DrawUI()
         {
+            var isGameHelperForeground = Process.GetCurrentProcess().MainWindowHandle == GetForegroundWindow();
+            if (!Core.Process.Foreground && !isGameHelperForeground) return;
+
             if (ProcessHandle == 0)
                 ProcessHandle = ProcessMemoryUtilities.Managed.NativeWrapper.OpenProcess(ProcessMemoryUtilities.Native.ProcessAccessFlags.Read, (int)Core.Process.Pid);
 
@@ -141,8 +146,8 @@ namespace Atlas
                 if (Settings.HideCompletedMaps && (atlasNode.IsCompleted || (mapName.EndsWith("Citadel") && atlasNode.IsFailedAttempt))) continue;
 
                 var textSize = ImGui.CalcTextSize(mapName);
-                var backgroundColor = Settings.MapGroups.Find(group => group.Maps.Contains(mapName))?.BackgroundColor ?? Settings.DefaultBackgroundColor;
-                var fontColor = Settings.MapGroups.Find(group => group.Maps.Contains(mapName))?.FontColor ?? Settings.DefaultFontColor;
+                var backgroundColor = Settings.MapGroups.Find(group => group.Maps.Exists(map => map.Equals(mapName, StringComparison.OrdinalIgnoreCase)))?.BackgroundColor ?? Settings.DefaultBackgroundColor;
+                var fontColor = Settings.MapGroups.Find(group => group.Maps.Exists(map => map.Equals(mapName, StringComparison.OrdinalIgnoreCase)))?.FontColor ?? Settings.DefaultFontColor;
                 var mapPosition = atlasNode.Position * Settings.ScaleMultiplier + new Vector2(25, 0);
 
                 var drawPosition = mapPosition - textSize / 2;
@@ -153,7 +158,7 @@ namespace Atlas
                 drawList.AddRectFilled(bgPos, bgPos + bgSize, ImGuiHelper.Color(backgroundColor));
                 drawList.AddText(drawPosition, ImGuiHelper.Color(fontColor), mapName);
 
-                if (!string.IsNullOrWhiteSpace(Search) && mapName.Contains(Search))
+                if (!string.IsNullOrWhiteSpace(Search) && mapName.Contains(Search, StringComparison.OrdinalIgnoreCase))
                     drawList.AddLine(playerlocation, drawPosition, 0xFFFFFFFF);
             }
         }
@@ -260,5 +265,8 @@ namespace Atlas
 
             return nodes;
         }
+
+        [DllImport("user32.dll")]
+        private static extern nint GetForegroundWindow();
     }
 }
