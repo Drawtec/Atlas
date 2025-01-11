@@ -34,23 +34,28 @@ namespace Atlas
         [FieldOffset(0xD0)] public Vector2 RelativePosition;
         [FieldOffset(0xE8)] public float Zoom;
         [FieldOffset(0x2A8)] public IntPtr NodeNameAddress;
-        [FieldOffset(0x299)] public byte Flags;
+        [FieldOffset(0x298)] public byte Flags1;
+        [FieldOffset(0x299)] public byte Flags2;
+        [FieldOffset(0x29A)] public byte Flags3;
         [FieldOffset(0x29F)] public byte ByteAvailable;
 
         public readonly float Scale => Zoom / 1.5f;
         public readonly Vector2 Position => RelativePosition * Scale;
 
-        public readonly bool IsAttempted => (Flags & 0b0000_0001) != 0;
-        public readonly bool IsPristine => (Flags & 0b0000_0010) != 0;
-        public readonly bool IsWatchTower => (Flags & 0b0000_0100) != 0;
-        public readonly bool HasCorruption => (Flags & 0b0000_1000) != 0;
-        public readonly bool HasBoss => (Flags & 0b0001_0000) != 0;
-        public readonly bool HasBreach => (Flags & 0b0010_0000) != 0;
-        public readonly bool HasExpedition => (Flags & 0b0100_0000) != 0;
-        public readonly bool HasDelirium => (Flags & 0b1000_0000) != 0;
-        public readonly bool IsCompleted => IsAttempted && IsPristine;
-        public readonly bool IsFailedAttempt => IsAttempted && !IsPristine;
-        public readonly bool IsAvailable => ByteAvailable == 0x00;
+        public readonly bool IsCompleted => (Flags1 & 0b0100_0000) != 0;
+        public readonly bool IsAttempted => (Flags2 & 0b0000_0001) != 0;
+        public readonly bool IsPristine => (Flags2 & 0b0000_0010) != 0;
+        public readonly bool IsWatchTower => (Flags2 & 0b0000_0100) != 0;
+        public readonly bool HasCorruption => (Flags2 & 0b0000_1000) != 0;
+        public readonly bool HasBoss => (Flags2 & 0b0001_0000) != 0;
+        public readonly bool HasBreach => (Flags2 & 0b0010_0000) != 0;
+        public readonly bool HasExpedition => (Flags2 & 0b0100_0000) != 0;
+        public readonly bool HasDelirium => (Flags2 & 0b1000_0000) != 0;
+        public readonly bool HasRitual => (Flags3 & 0b0000_0001) != 0;
+        public readonly bool HasIrradiated => (Flags3 & 0b0000_0010) != 0;
+        //public readonly bool IsCompleted => IsAttempted && IsPristine;
+        public readonly bool IsFailedAttempt => IsAttempted && !IsCompleted;
+        public readonly bool IsAvailable => !IsAttempted && IsPristine;
 
         public string MapName
         {
