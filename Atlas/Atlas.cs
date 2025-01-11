@@ -43,6 +43,10 @@ namespace Atlas
 
         public override void DrawSettings()
         {
+            ImGui.Checkbox($"##ControllerMode", ref Settings.ControllerMode);
+            ImGui.SameLine();
+            ImGui.Text($"ControllerMode");
+
             ImGui.InputText($"##Search", ref Search, 256);
             ImGui.SameLine();
             ImGui.Text($"Search");
@@ -52,6 +56,9 @@ namespace Atlas
             ImGui.Text($"Hide Completed Maps");
             ImGui.SameLine();
             ColorSwatch($"##DefaultBackgroundColor", ref Settings.DefaultBackgroundColor);
+            ImGui.Checkbox($"##HideFailedMaps", ref Settings.HideFailedMaps);
+            ImGui.SameLine();
+            ImGui.Text($"Hide Failed Maps");
             ImGui.SameLine();
             ImGui.Text($"Default Background Color");
             ImGui.SameLine();
@@ -137,13 +144,20 @@ namespace Atlas
 
             var drawList = ImGui.GetBackgroundDrawList();
             var atlasNodes = GetAtlasNodes();
+            var atlasNodesController = GetAtlasNodesController();
             var playerlocation = Core.States.InGameStateObject.CurrentWorldInstance.WorldToScreen(playerRender.WorldPosition);
+
+            if(Settings.ControllerMode == true)
+            {
+                atlasNodes = atlasNodesController;
+            }
 
             foreach (var atlasNode in atlasNodes)
             {
                 var mapName = atlasNode.MapName;
                 if (string.IsNullOrWhiteSpace(mapName)) continue;
-                if (Settings.HideCompletedMaps && (atlasNode.IsCompleted || (mapName.EndsWith("Citadel") && atlasNode.IsFailedAttempt))) continue;
+                if (Settings.HideCompletedMaps && (atlasNode.IsCompleted || (mapName.EndsWith("Citadel")))) continue;
+                if (Settings.HideFailedMaps && (atlasNode.IsFailedAttempt || (mapName.EndsWith("Citadel")))) continue;
 
                 var textSize = ImGui.CalcTextSize(mapName);
                 var backgroundColor = Settings.MapGroups.Find(group => group.Maps.Exists(map => map.Equals(mapName, StringComparison.OrdinalIgnoreCase)))?.BackgroundColor ?? Settings.DefaultBackgroundColor;
@@ -231,6 +245,7 @@ namespace Atlas
         // ==================================================
         public static IntPtr ProcessHandle { get; set; }
 
+
         public static T Read<T>(IntPtr address) where T : unmanaged
         {
             if (address == IntPtr.Zero) return default;
@@ -249,12 +264,38 @@ namespace Atlas
             return Encoding.Unicode.GetString(result).Split('\0')[0];
         }
 
+        
+        
         private static List<AtlasNode> GetAtlasNodes()
         {
+            
             var nodes = new List<AtlasNode>();
-
             var uiElement = Atlas.Read<UiElement>(Core.States.InGameStateObject.GameUi.Address);
+     
+            
             uiElement = uiElement.GetChild(24);
+            uiElement = uiElement.GetChild(0);
+            uiElement = uiElement.GetChild(6);
+            
+
+            if (!uiElement.IsVisible || uiElement.FirstChild == IntPtr.Zero || uiElement.Length > 10000) return nodes;
+
+            for (var i = 0; i < uiElement.Length; i++)
+                nodes.Add(uiElement.GetAtlasNode(i));
+
+            return nodes;
+        }
+        private static List<AtlasNode> GetAtlasNodesController()
+        {
+
+            var nodes = new List<AtlasNode>();
+            var uiElement = Atlas.Read<UiElement>(Core.States.InGameStateObject.GameUi.Address);
+
+
+            uiElement = uiElement.GetChild(17);
+            uiElement = uiElement.GetChild(2);
+            uiElement = uiElement.GetChild(3);
+            uiElement = uiElement.GetChild(0);
             uiElement = uiElement.GetChild(0);
             uiElement = uiElement.GetChild(6);
 
@@ -265,6 +306,7 @@ namespace Atlas
 
             return nodes;
         }
+
 
         [DllImport("user32.dll")]
         private static extern nint GetForegroundWindow();
