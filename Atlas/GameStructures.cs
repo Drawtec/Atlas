@@ -41,8 +41,7 @@ namespace Atlas
 
         public readonly float Scale => Zoom / 1.5f;
         public readonly Vector2 Position => RelativePosition * Scale;
-
-        public readonly bool IsCompleted => (Flags1 & 0b0100_0000) != 0;
+        public readonly bool IsVaalorHideOut => (Flags1 & 0b0100_0000) != 0;
         public readonly bool IsAttempted => (Flags2 & 0b0000_0001) != 0;
         public readonly bool IsPristine => (Flags2 & 0b0000_0010) != 0;
         public readonly bool IsWatchTower => (Flags2 & 0b0000_0100) != 0;
@@ -54,7 +53,8 @@ namespace Atlas
         public readonly bool HasRitual => (Flags3 & 0b0000_0001) != 0;
         public readonly bool HasIrradiated => (Flags3 & 0b0000_0010) != 0;
         //public readonly bool IsCompleted => IsAttempted && IsPristine;
-        public readonly bool IsFailedAttempt => IsAttempted && !IsCompleted;
+        public readonly bool IsFailedAttempt => IsAttempted && !IsPristine;
+        public readonly bool IsCompleted => IsAttempted && IsPristine;
         public readonly bool IsAvailable => !IsAttempted && IsPristine;
 
         public string MapName
