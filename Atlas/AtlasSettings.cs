@@ -13,6 +13,8 @@ namespace Atlas
         public float ScaleMultiplier = 1.0f;
         public List<MapGroupSettings> MapGroups = [];
         public string GroupNameInput = string.Empty;
+        public float XSlider = 500.0f;
+        public float YSlider = 500.0f;
         public bool ControllerMode = false;
 
         public AtlasSettings()
