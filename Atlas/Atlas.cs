@@ -70,6 +70,13 @@ namespace Atlas
             ImGui.SameLine();
             ImGui.Text($"Scale Multiplier");
 
+            ImGui.SliderFloat("##XSlider", ref Settings.XSlider, 0.0f, 1000.0f);
+            ImGui.SameLine();
+            ImGui.Text($"Move X Axis");
+            ImGui.SliderFloat("##YSlider", ref Settings.YSlider, 0.0f, 1000.0f);
+            ImGui.SameLine();
+            ImGui.Text($"Move Y Axis");
+
             ImGui.InputText($"##MapGroupName", ref Settings.GroupNameInput, 256);
             ImGui.SameLine();
             if (ImGui.Button("Add new map group"))
@@ -163,8 +170,8 @@ namespace Atlas
                 var backgroundColor = Settings.MapGroups.Find(group => group.Maps.Exists(map => map.Equals(mapName, StringComparison.OrdinalIgnoreCase)))?.BackgroundColor ?? Settings.DefaultBackgroundColor;
                 var fontColor = Settings.MapGroups.Find(group => group.Maps.Exists(map => map.Equals(mapName, StringComparison.OrdinalIgnoreCase)))?.FontColor ?? Settings.DefaultFontColor;
                 var mapPosition = atlasNode.Position * Settings.ScaleMultiplier + new Vector2(25, 0);
-
-                var drawPosition = mapPosition - textSize / 2;
+                var positionSlider = new Vector2(Settings.XSlider - 500, Settings.YSlider - 500);
+                var drawPosition = (mapPosition - textSize / 2) + positionSlider;
                 var padding = new Vector2(5, 2);
                 var bgPos = drawPosition - padding;
                 var bgSize = textSize + padding * 2;
