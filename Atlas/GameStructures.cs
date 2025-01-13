@@ -34,20 +34,22 @@ namespace Atlas
         [FieldOffset(0xD0)] public Vector2 RelativePosition;
         [FieldOffset(0xE8)] public float Zoom;
         [FieldOffset(0x2A8)] public IntPtr NodeNameAddress;
-        [FieldOffset(0x299)] public byte Flags;
+        [FieldOffset(0x299)] public AtlasNodeState Flags;
         [FieldOffset(0x29F)] public byte ByteAvailable;
 
         public readonly float Scale => Zoom / 1.5f;
         public readonly Vector2 Position => RelativePosition * Scale;
 
-        public readonly bool IsAttempted => (Flags & 0b0000_0001) != 0;
-        public readonly bool IsPristine => (Flags & 0b0000_0010) != 0;
-        public readonly bool IsWatchTower => (Flags & 0b0000_0100) != 0;
-        public readonly bool HasCorruption => (Flags & 0b0000_1000) != 0;
-        public readonly bool HasBoss => (Flags & 0b0001_0000) != 0;
-        public readonly bool HasBreach => (Flags & 0b0010_0000) != 0;
-        public readonly bool HasExpedition => (Flags & 0b0100_0000) != 0;
-        public readonly bool HasDelirium => (Flags & 0b1000_0000) != 0;
+        public readonly bool IsAttempted => Flags.HasFlag(AtlasNodeState.Attempted);
+        public readonly bool IsPristine => Flags.HasFlag(AtlasNodeState.Pristine);
+        public readonly bool IsWatchTower => Flags.HasFlag(AtlasNodeState.WatchTower);
+        public readonly bool HasCorruption => Flags.HasFlag(AtlasNodeState.Corruption);
+        public readonly bool HasBoss => Flags.HasFlag(AtlasNodeState.Boss);
+        public readonly bool HasBreach => Flags.HasFlag(AtlasNodeState.Breach);
+        public readonly bool HasExpedition => Flags.HasFlag(AtlasNodeState.Expedition);
+        public readonly bool HasDelirium => Flags.HasFlag(AtlasNodeState.Delirium);
+        public readonly bool HasRitual => Flags.HasFlag(AtlasNodeState.Ritual);
+        public readonly bool IsIrradiated => Flags.HasFlag(AtlasNodeState.Irradiated);
         public readonly bool IsCompleted => IsAttempted && IsPristine;
         public readonly bool IsFailedAttempt => IsAttempted && !IsPristine;
         public readonly bool IsAvailable => ByteAvailable == 0x00;
@@ -60,5 +62,21 @@ namespace Atlas
                 return Atlas.ReadWideString(address, 64);
             }
         }
+    }
+
+    [Flags]
+    public enum AtlasNodeState : ushort
+    {
+        None = 0,
+        Attempted = 1 << 0,
+        Pristine = 1 << 1,
+        WatchTower = 1 << 2,
+        Corruption = 1 << 3,
+        Boss = 1 << 4,
+        Breach = 1 << 5,
+        Expedition = 1 << 6,
+        Delirium = 1 << 7,
+        Ritual = 1 << 8,
+        Irradiated = 1 << 9,
     }
 }

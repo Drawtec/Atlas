@@ -10,6 +10,8 @@ namespace Atlas
         public Vector4 DefaultFontColor = new(1.0f, 1.0f, 1.0f, 1.0f);
         public bool HideCompletedMaps = true;
         public float ScaleMultiplier = 1.0f;
+        public float PositionOffsetX = 0.0f;
+        public float PositionOffsetY = 0.0f;
         public List<MapGroupSettings> MapGroups = [];
         public string GroupNameInput = string.Empty;
 

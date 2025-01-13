@@ -11,6 +11,7 @@ namespace Atlas
     using System.Diagnostics;
     using System.IO;
     using System.Numerics;
+    using System.Reflection;
     using System.Runtime.InteropServices;
     using System.Text;
 
@@ -62,6 +63,13 @@ namespace Atlas
             ImGui.SliderFloat("##ScaleMultiplier", ref Settings.ScaleMultiplier, 1.0f, 2.0f);
             ImGui.SameLine();
             ImGui.Text($"Scale Multiplier");
+
+            ImGui.SliderFloat("##PositionOffsetX", ref Settings.PositionOffsetX, 0.0f, 3000.0f);
+            ImGui.SameLine();
+            ImGui.Text($"Move X Axis");
+            ImGui.SliderFloat("##PositionOffsetY", ref Settings.PositionOffsetY, 0.0f, 2000.0f);
+            ImGui.SameLine();
+            ImGui.Text($"Move Y Axis");
 
             ImGui.InputText($"##MapGroupName", ref Settings.GroupNameInput, 256);
             ImGui.SameLine();
@@ -150,7 +158,7 @@ namespace Atlas
                 var fontColor = Settings.MapGroups.Find(group => group.Maps.Exists(map => map.Equals(mapName, StringComparison.OrdinalIgnoreCase)))?.FontColor ?? Settings.DefaultFontColor;
                 var mapPosition = atlasNode.Position * Settings.ScaleMultiplier + new Vector2(25, 0);
 
-                var drawPosition = mapPosition - textSize / 2;
+                var drawPosition = (mapPosition - textSize / 2) + new Vector2(Settings.PositionOffsetX, Settings.PositionOffsetY);
                 var padding = new Vector2(5, 2);
                 var bgPos = drawPosition - padding;
                 var bgSize = textSize + padding * 2;
@@ -254,9 +262,22 @@ namespace Atlas
             var nodes = new List<AtlasNode>();
 
             var uiElement = Atlas.Read<UiElement>(Core.States.InGameStateObject.GameUi.Address);
-            uiElement = uiElement.GetChild(24);
-            uiElement = uiElement.GetChild(0);
-            uiElement = uiElement.GetChild(6);
+
+            if (EnableControllerMode())
+            {
+                uiElement = uiElement.GetChild(17);
+                uiElement = uiElement.GetChild(2);
+                uiElement = uiElement.GetChild(3);
+                uiElement = uiElement.GetChild(0);
+                uiElement = uiElement.GetChild(0);
+                uiElement = uiElement.GetChild(6);
+            }
+            else
+            {
+                uiElement = uiElement.GetChild(24);
+                uiElement = uiElement.GetChild(0);
+                uiElement = uiElement.GetChild(6);
+            }
 
             if (!uiElement.IsVisible || uiElement.FirstChild == IntPtr.Zero || uiElement.Length > 10000) return nodes;
 
@@ -264,6 +285,17 @@ namespace Atlas
                 nodes.Add(uiElement.GetAtlasNode(i));
 
             return nodes;
+        }
+
+        private static bool EnableControllerMode()
+        {
+            var assembly = Assembly.Load("GameHelper");
+            var core = assembly.GetType("GameHelper.Core");
+            var ghSettingsProperty = core.GetProperty("GHSettings", BindingFlags.Static | BindingFlags.NonPublic);
+            var ghSettingsInstance = ghSettingsProperty.GetValue(null);
+            var ghSettingsType = ghSettingsInstance.GetType();
+            var enableControllerModeField = ghSettingsType.GetField("EnableControllerMode", BindingFlags.Instance | BindingFlags.Public);
+            return (bool)enableControllerModeField.GetValue(ghSettingsInstance);
         }
 
         [DllImport("user32.dll")]
