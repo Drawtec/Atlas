@@ -2,6 +2,7 @@ namespace Atlas
 {
     using GameHelper;
     using GameHelper.Plugin;
+    using GameHelper.Settings;
     using GameHelper.RemoteObjects.Components;
     using GameHelper.Utils;
     using ImGuiNET;
@@ -19,7 +20,7 @@ namespace Atlas
         private string SettingPathname => Path.Join(this.DllDirectory, "config", "settings.txt");
         private string NewGroupName = string.Empty;
         private string Search = string.Empty;
-
+        private bool ControllerMode = Core.GHSettings.EnableControllerMode;
         public override void OnDisable()
         {
         }
@@ -43,9 +44,9 @@ namespace Atlas
 
         public override void DrawSettings()
         {
-            ImGui.Checkbox($"##ControllerMode", ref Settings.ControllerMode);
+           /* ImGui.Checkbox($"##ControllerMode", ref Settings.ControllerMode);
             ImGui.SameLine();
-            ImGui.Text($"ControllerMode");
+            ImGui.Text($"ControllerMode"); */
 
             ImGui.InputText($"##Search", ref Search, 256);
             ImGui.SameLine();
@@ -55,10 +56,10 @@ namespace Atlas
             ImGui.SameLine();
             ImGui.Text($"Hide Completed Maps");
             ImGui.SameLine();
-            ColorSwatch($"##DefaultBackgroundColor", ref Settings.DefaultBackgroundColor);
             ImGui.Checkbox($"##HideFailedMaps", ref Settings.HideFailedMaps);
             ImGui.SameLine();
             ImGui.Text($"Hide Failed Maps");
+            ColorSwatch($"##DefaultBackgroundColor", ref Settings.DefaultBackgroundColor);
             ImGui.SameLine();
             ImGui.Text($"Default Background Color");
             ImGui.SameLine();
@@ -66,14 +67,14 @@ namespace Atlas
             ImGui.SameLine();
             ImGui.Text($"Default Font Color");
 
-            ImGui.SliderFloat("##ScaleMultiplier", ref Settings.ScaleMultiplier, 1.0f, 2.0f);
+            ImGui.SliderFloat("##ScaleMultiplier", ref Settings.ScaleMultiplier, 0.5f, 2.0f);
             ImGui.SameLine();
             ImGui.Text($"Scale Multiplier");
 
-            ImGui.SliderFloat("##XSlider", ref Settings.XSlider, 0.0f, 1000.0f);
+            ImGui.SliderFloat("##XSlider", ref Settings.XSlider, 0.0f, 3000.0f);
             ImGui.SameLine();
             ImGui.Text($"Move X Axis");
-            ImGui.SliderFloat("##YSlider", ref Settings.YSlider, 0.0f, 1000.0f);
+            ImGui.SliderFloat("##YSlider", ref Settings.YSlider, 0.0f, 3000.0f);
             ImGui.SameLine();
             ImGui.Text($"Move Y Axis");
 
@@ -145,16 +146,15 @@ namespace Atlas
 
             if (ProcessHandle == 0)
                 ProcessHandle = ProcessMemoryUtilities.Managed.NativeWrapper.OpenProcess(ProcessMemoryUtilities.Native.ProcessAccessFlags.Read, (int)Core.Process.Pid);
-
+            
             var player = Core.States.InGameStateObject.CurrentAreaInstance.Player;
             if (!player.TryGetComponent<Render>(out var playerRender)) return;
-
             var drawList = ImGui.GetBackgroundDrawList();
             var atlasNodes = GetAtlasNodes();
             var atlasNodesController = GetAtlasNodesController();
             var playerlocation = Core.States.InGameStateObject.CurrentWorldInstance.WorldToScreen(playerRender.WorldPosition);
-
-            if(Settings.ControllerMode == true)
+            
+            if(ControllerMode == true)
             {
                 atlasNodes = atlasNodesController;
             }
@@ -163,14 +163,16 @@ namespace Atlas
             {
                 var mapName = atlasNode.MapName;
                 if (string.IsNullOrWhiteSpace(mapName)) continue;
-                if (Settings.HideCompletedMaps && (atlasNode.IsCompleted || (mapName.EndsWith("Citadel")))) continue;
-                if (Settings.HideFailedMaps && (atlasNode.IsFailedAttempt || (mapName.EndsWith("Citadel")))) continue;
+                if (Settings.HideCompletedMaps && (atlasNode.IsCompleted )) continue;
+                if (Settings.HideFailedMaps && (atlasNode.IsFailedAttempt )) continue;
 
                 var textSize = ImGui.CalcTextSize(mapName);
                 var backgroundColor = Settings.MapGroups.Find(group => group.Maps.Exists(map => map.Equals(mapName, StringComparison.OrdinalIgnoreCase)))?.BackgroundColor ?? Settings.DefaultBackgroundColor;
                 var fontColor = Settings.MapGroups.Find(group => group.Maps.Exists(map => map.Equals(mapName, StringComparison.OrdinalIgnoreCase)))?.FontColor ?? Settings.DefaultFontColor;
+                
+
                 var mapPosition = atlasNode.Position * Settings.ScaleMultiplier + new Vector2(25, 0);
-                var positionSlider = new Vector2(Settings.XSlider - 500, Settings.YSlider - 500);
+                var positionSlider = new Vector2(Settings.XSlider - 1500, Settings.YSlider - 1500);
                 var drawPosition = (mapPosition - textSize / 2) + positionSlider;
                 var padding = new Vector2(5, 2);
                 var bgPos = drawPosition - padding;
