@@ -1,5 +1,6 @@
 namespace Atlas
 {
+
     using GameHelper.Plugin;
     using System.Collections.Generic;
     using System.Numerics;
@@ -13,9 +14,9 @@ namespace Atlas
         public float ScaleMultiplier = 1.0f;
         public List<MapGroupSettings> MapGroups = [];
         public string GroupNameInput = string.Empty;
-        public float XSlider = 500.0f;
-        public float YSlider = 500.0f;
-        public bool ControllerMode = false;
+        public float XSlider = 1500.0f;
+        public float YSlider = 1500.0f;
+        
 
         public AtlasSettings()
         {
