@@ -20,7 +20,7 @@ namespace Atlas
         private string SettingPathname => Path.Join(this.DllDirectory, "config", "settings.txt");
         private string NewGroupName = string.Empty;
         private string Search = string.Empty;
-        private bool ControllerMode = Core.GHSettings.EnableControllerMode;
+
         public override void OnDisable()
         {
         }
@@ -44,10 +44,10 @@ namespace Atlas
 
         public override void DrawSettings()
         {
-           /* ImGui.Checkbox($"##ControllerMode", ref Settings.ControllerMode);
-            ImGui.SameLine();
-            ImGui.Text($"ControllerMode"); */
-
+            /* ImGui.Checkbox($"##ControllerMode", ref Settings.ControllerMode);
+             ImGui.SameLine();
+             ImGui.Text($"ControllerMode"); */
+            #region Colorsettings
             ImGui.InputText($"##Search", ref Search, 256);
             ImGui.SameLine();
             ImGui.Text($"Search");
@@ -59,6 +59,7 @@ namespace Atlas
             ImGui.Checkbox($"##HideFailedMaps", ref Settings.HideFailedMaps);
             ImGui.SameLine();
             ImGui.Text($"Hide Failed Maps");
+
             ColorSwatch($"##DefaultBackgroundColor", ref Settings.DefaultBackgroundColor);
             ImGui.SameLine();
             ImGui.Text($"Default Background Color");
@@ -66,6 +67,50 @@ namespace Atlas
             ColorSwatch($"##DefaultFontColor", ref Settings.DefaultFontColor);
             ImGui.SameLine();
             ImGui.Text($"Default Font Color");
+
+            ImGui.Checkbox($"##ShowMapFlags", ref Settings.ShowMapFlags);
+            ImGui.SameLine();
+            ImGui.Text($"Show Map Flags");
+
+            ColorSwatch($"##BossBackgroundColor", ref Settings.DefaultBackgroundColor);
+            ImGui.SameLine();
+            ImGui.Text($"Boss Background Color");
+            ImGui.SameLine();
+            ColorSwatch($"##BossFontColor", ref Settings.DefaultFontColor);
+            ImGui.SameLine();
+            ImGui.Text($"Boss Font Color");
+
+            ColorSwatch($"##BreachBackgroundColor", ref Settings.DefaultBackgroundColor);
+            ImGui.SameLine();
+            ImGui.Text($"Breach Background Color");
+            ImGui.SameLine();
+            ColorSwatch($"##BreachFontColor", ref Settings.DefaultFontColor);
+            ImGui.SameLine();
+            ImGui.Text($"Breach Font Color");
+
+            ColorSwatch($"##DeliriumBackgroundColor", ref Settings.DeliriumBackgroundColor);
+            ImGui.SameLine();
+            ImGui.Text($"Delirium Background Color");
+            ImGui.SameLine();
+            ColorSwatch($"##DeliriumFontColor", ref Settings.DeliriumFontColor);
+            ImGui.SameLine();
+            ImGui.Text($"Delirium Font Color");
+
+            ColorSwatch($"##ExpiditionBackgroundColor", ref Settings.ExpiditionBackgroundColor);
+            ImGui.SameLine();
+            ImGui.Text($"Expidition Background Color");
+            ImGui.SameLine();
+            ColorSwatch($"##ExpiditionFontColor", ref Settings.ExpiditionFontColor);
+            ImGui.SameLine();
+            ImGui.Text($"Expidition Font Color");
+
+            ColorSwatch($"##RitualBackgroundColor", ref Settings.RitualBackgroundColor);
+            ImGui.SameLine();
+            ImGui.Text($"Ritual Background Color");
+            ImGui.SameLine();
+            ColorSwatch($"##RitualFontColor", ref Settings.RitualFontColor);
+            ImGui.SameLine();
+            ImGui.Text($"Ritual Font Color");
 
             ImGui.SliderFloat("##ScaleMultiplier", ref Settings.ScaleMultiplier, 0.5f, 2.0f);
             ImGui.SameLine();
@@ -137,49 +182,109 @@ namespace Atlas
                     }
                 }
             }
+            #endregion
         }
 
         public override void DrawUI()
         {
+            var rightPanel = RightPanel();
             var isGameHelperForeground = Process.GetCurrentProcess().MainWindowHandle == GetForegroundWindow();
             if (!Core.Process.Foreground && !isGameHelperForeground) return;
-
+            
             if (ProcessHandle == 0)
                 ProcessHandle = ProcessMemoryUtilities.Managed.NativeWrapper.OpenProcess(ProcessMemoryUtilities.Native.ProcessAccessFlags.Read, (int)Core.Process.Pid);
-            
+            var controllerMode = Core.GHSettings.EnableControllerMode;
             var player = Core.States.InGameStateObject.CurrentAreaInstance.Player;
             if (!player.TryGetComponent<Render>(out var playerRender)) return;
             var drawList = ImGui.GetBackgroundDrawList();
-            var atlasNodes = GetAtlasNodes();
+            var atlasNodes =new List<AtlasNode>();
             var atlasNodesController = GetAtlasNodesController();
             var playerlocation = Core.States.InGameStateObject.CurrentWorldInstance.WorldToScreen(playerRender.WorldPosition);
-            
-            if(ControllerMode == true)
+            if (rightPanel) return;
+            if(controllerMode == true)
             {
-                atlasNodes = atlasNodesController;
+               atlasNodes = GetAtlasNodesController();
+            }
+            else
+            {
+              atlasNodes = GetAtlasNodes();
             }
 
             foreach (var atlasNode in atlasNodes)
             {
                 var mapName = atlasNode.MapName;
                 if (string.IsNullOrWhiteSpace(mapName)) continue;
-                if (Settings.HideCompletedMaps && (atlasNode.IsCompleted )) continue;
-                if (Settings.HideFailedMaps && (atlasNode.IsFailedAttempt )) continue;
+                if (Settings.HideCompletedMaps && (atlasNode.IsCompleted)) continue;
+                if (Settings.HideFailedMaps && (atlasNode.IsFailedAttempt)) continue;
 
+
+                var hasBoss = atlasNode.HasBoss;
+                var hasBreach = atlasNode.HasBreach;
+                var hasDelirium = atlasNode.HasDelirium;
+                var hasExpidition = atlasNode.HasExpedition;
+                var hasRitual = atlasNode.HasRitual;
+              
                 var textSize = ImGui.CalcTextSize(mapName);
                 var backgroundColor = Settings.MapGroups.Find(group => group.Maps.Exists(map => map.Equals(mapName, StringComparison.OrdinalIgnoreCase)))?.BackgroundColor ?? Settings.DefaultBackgroundColor;
                 var fontColor = Settings.MapGroups.Find(group => group.Maps.Exists(map => map.Equals(mapName, StringComparison.OrdinalIgnoreCase)))?.FontColor ?? Settings.DefaultFontColor;
-                
 
+                var showMapFlags = Settings.ShowMapFlags;
                 var mapPosition = atlasNode.Position * Settings.ScaleMultiplier + new Vector2(25, 0);
                 var positionSlider = new Vector2(Settings.XSlider - 1500, Settings.YSlider - 1500);
                 var drawPosition = (mapPosition - textSize / 2) + positionSlider;
+                var drawFlagPosition = drawPosition - new Vector2 (-10 , - 32);
                 var padding = new Vector2(5, 2);
+                var fpadding = new Vector2(4, 10);
                 var bgPos = drawPosition - padding;
+                var bgFlagPos = drawFlagPosition - fpadding;
                 var bgSize = textSize + padding * 2;
 
                 drawList.AddRectFilled(bgPos, bgPos + bgSize, ImGuiHelper.Color(backgroundColor));
                 drawList.AddText(drawPosition, ImGuiHelper.Color(fontColor), mapName);
+                
+
+
+                
+                
+                
+                
+                
+               
+                if (showMapFlags)
+                {
+                    var i = 0;
+                    var r = 11;
+                    if (hasBoss)
+                    {
+                        drawList.AddCircleFilled(drawFlagPosition, r, ImGuiHelper.Color(Settings.BossBackgroundColor));
+                        drawList.AddText(bgFlagPos, ImGuiHelper.Color(Settings.BossFontColor), "B");
+                        i = i + 2;
+                    }
+                    if (hasBreach)
+                    {
+                        drawList.AddCircleFilled(drawFlagPosition + new Vector2(r * i + 1, 0), r, ImGuiHelper.Color(Settings.BreachBackgroundColor));
+                        drawList.AddText(bgFlagPos + new Vector2(r * i + 1, 0), ImGuiHelper.Color(Settings.BreachFontColor), "B");
+                        i = i + 2;
+                    }
+                    if (hasDelirium)
+                    {
+                        drawList.AddCircleFilled(drawFlagPosition + new Vector2(r * i + 1, 0), r, ImGuiHelper.Color(Settings.DeliriumBackgroundColor));
+                        drawList.AddText(bgFlagPos + new Vector2(r * i + 1, 0), ImGuiHelper.Color(Settings.DeliriumFontColor), "D");
+                        i = i + 2;
+                    }
+                    if (hasExpidition)
+                    {
+                        drawList.AddCircleFilled(drawFlagPosition + new Vector2(r * i + 1, 0), r, ImGuiHelper.Color(Settings.ExpiditionBackgroundColor));
+                        drawList.AddText(bgFlagPos + new Vector2(r * i + 1, 0), ImGuiHelper.Color(Settings.ExpiditionFontColor), "E");
+                        i = i + 2;
+                    }
+                    if (hasRitual)
+                    {
+                        drawList.AddCircleFilled(drawFlagPosition + new Vector2(r * i + 1, 0), r, ImGuiHelper.Color(Settings.RitualBackgroundColor));
+                        drawList.AddText(bgFlagPos + new Vector2(r * i + 1, 0), ImGuiHelper.Color(Settings.RitualFontColor), "R");
+                        i = i + 2;
+                    }
+                }
 
                 if (!string.IsNullOrWhiteSpace(Search) && mapName.Contains(Search, StringComparison.OrdinalIgnoreCase))
                     drawList.AddLine(playerlocation, drawPosition, 0xFFFFFFFF);
@@ -316,6 +421,14 @@ namespace Atlas
             return nodes;
         }
 
+       private static bool RightPanel()
+        {
+            var uiElement = Atlas.Read<UiElement>(Core.States.InGameStateObject.GameUi.Address);
+
+            var rightPanel = uiElement.GetChild(33);
+            return rightPanel.IsVisible;
+
+        }
 
         [DllImport("user32.dll")]
         private static extern nint GetForegroundWindow();
