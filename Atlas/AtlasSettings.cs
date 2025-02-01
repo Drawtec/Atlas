@@ -16,8 +16,17 @@ namespace Atlas
         public string GroupNameInput = string.Empty;
         public float XSlider = 1500.0f;
         public float YSlider = 1500.0f;
-        
-
+        public bool ShowMapFlags = true;
+        public Vector4 BossBackgroundColor = new(0.0f, 0.0f, 0.0f, 0.8f);
+        public Vector4 BossFontColor = new(1.0f, 1.0f, 1.0f, 1.0f);
+        public Vector4 BreachBackgroundColor = new(0.6f, 0.0f, 0.6f, 0.8f);
+        public Vector4 BreachFontColor = new(1.0f, 1.0f, 1.0f, 1.0f);
+        public Vector4 DeliriumBackgroundColor = new(0.0f, 0.0f, 0.8f, 0.8f);
+        public Vector4 DeliriumFontColor = new(1.0f, 1.0f, 1.0f, 1.0f);
+        public Vector4 ExpiditionBackgroundColor = new(0.0f, 0.8f, 0.0f, 0.8f);
+        public Vector4 ExpiditionFontColor = new(1.0f, 1.0f, 1.0f, 1.0f);
+        public Vector4 RitualBackgroundColor = new(0.8f, 0.0f, 0.0f, 0.8f);
+        public Vector4 RitualFontColor = new(1.0f, 1.0f, 1.0f, 1.0f);
         public AtlasSettings()
         {
             var citadels = new MapGroupSettings("Citadels", new Vector4(1.0f, 0.0f, 0.0f, 0.4f), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -55,4 +64,5 @@ namespace Atlas
         public List<string> Maps = [];
         public string MapNameInput = string.Empty;
     }
+
 }
