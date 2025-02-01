@@ -44,9 +44,6 @@ namespace Atlas
 
         public override void DrawSettings()
         {
-            /* ImGui.Checkbox($"##ControllerMode", ref Settings.ControllerMode);
-             ImGui.SameLine();
-             ImGui.Text($"ControllerMode"); */
             #region Colorsettings
             ImGui.InputText($"##Search", ref Search, 256);
             ImGui.SameLine();
