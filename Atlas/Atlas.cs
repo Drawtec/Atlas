@@ -274,7 +274,7 @@ namespace Atlas
             }
             else
             {
-                uiElement = uiElement.GetChild(24);
+                uiElement = uiElement.GetChild(25);
                 uiElement = uiElement.GetChild(0);
                 uiElement = uiElement.GetChild(6);
             }
@@ -292,6 +292,10 @@ namespace Atlas
             var assembly = Assembly.Load("GameHelper");
             var core = assembly.GetType("GameHelper.Core");
             var ghSettingsProperty = core.GetProperty("GHSettings", BindingFlags.Static | BindingFlags.NonPublic);
+
+            if (ghSettingsProperty is null)
+                return false;
+
             var ghSettingsInstance = ghSettingsProperty.GetValue(null);
             var ghSettingsType = ghSettingsInstance.GetType();
             var enableControllerModeField = ghSettingsType.GetField("EnableControllerMode", BindingFlags.Instance | BindingFlags.Public);

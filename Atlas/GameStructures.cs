@@ -9,11 +9,11 @@ namespace Atlas
     {
         [FieldOffset(0x38)] public IntPtr FirstChild;
         [FieldOffset(0x40)] public IntPtr LastChild;
-        [FieldOffset(0x165)] public byte Flags;
+        [FieldOffset(0x1B8)] public byte Flags;
 
         public readonly int Length => (int)(this.LastChild.ToInt64() - this.FirstChild.ToInt64()) / 0x8;
 
-        public readonly bool IsVisible => (this.Flags & 0x8) != 0;
+        public readonly bool IsVisible => (this.Flags & 0x0B) != 0;
 
         public readonly UiElement GetChild(int index)
         {
@@ -31,11 +31,10 @@ namespace Atlas
     [StructLayout(LayoutKind.Explicit, Pack = 1)]
     public struct AtlasNode
     {
-        [FieldOffset(0xD0)] public Vector2 RelativePosition;
-        [FieldOffset(0xE8)] public float Zoom;
-        [FieldOffset(0x2A8)] public IntPtr NodeNameAddress;
-        [FieldOffset(0x299)] public AtlasNodeState Flags;
-        [FieldOffset(0x29F)] public byte ByteAvailable;
+        [FieldOffset(0x110)] public Vector2 RelativePosition;
+        [FieldOffset(0x12C)] public float Zoom;
+        [FieldOffset(0x270)] public IntPtr NodeNameAddress;
+        [FieldOffset(0x290)] public AtlasNodeState Flags;
 
         public readonly float Scale => Zoom / 1.5f;
         public readonly Vector2 Position => RelativePosition * Scale;
@@ -52,7 +51,6 @@ namespace Atlas
         public readonly bool IsIrradiated => Flags.HasFlag(AtlasNodeState.Irradiated);
         public readonly bool IsCompleted => IsAttempted && IsPristine;
         public readonly bool IsFailedAttempt => IsAttempted && !IsPristine;
-        public readonly bool IsAvailable => ByteAvailable == 0x00;
 
         public string MapName
         {
