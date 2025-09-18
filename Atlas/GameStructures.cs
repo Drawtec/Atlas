@@ -9,11 +9,11 @@ namespace Atlas
     {
         [FieldOffset(0x38)] public IntPtr FirstChild;
         [FieldOffset(0x40)] public IntPtr LastChild;
-        [FieldOffset(0x1B8)] public byte Flags;
+        [FieldOffset(0x1B8)] public uint Flags;
 
         public readonly int Length => (int)(this.LastChild.ToInt64() - this.FirstChild.ToInt64()) / 0x8;
 
-        public readonly bool IsVisible => (this.Flags & 0x0B) != 0;
+        public readonly bool IsVisible => (this.Flags & (1 << 0x0B)) != 0;
 
         public readonly UiElement GetChild(int index)
         {
