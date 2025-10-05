@@ -60,6 +60,15 @@ namespace Atlas
             ImGui.SameLine();
             ImGui.Text($"Default Font Color");
 
+            ImGui.Text($"Abyss:");
+            ImGui.Checkbox($"##TrackAbyss", ref Settings.TrackAbyssMaps);
+            ImGui.SameLine();
+            ImGui.Text($"Track Abyss");
+            ImGui.SameLine();
+            ImGui.Checkbox($"##TrackAbyssRevealedOnly", ref Settings.TrackAbyssRevealedOnly);
+            ImGui.SameLine();
+            ImGui.Text($"Only Revealed");
+
             ImGui.SliderFloat("##ScaleMultiplier", ref Settings.ScaleMultiplier, 1.0f, 2.0f);
             ImGui.SameLine();
             ImGui.Text($"Scale Multiplier");
@@ -150,8 +159,8 @@ namespace Atlas
             foreach (var atlasNode in atlasNodes)
             {
                 var mapName = atlasNode.MapName;
-                if (string.IsNullOrWhiteSpace(mapName)) continue;
-                if (Settings.HideCompletedMaps && (atlasNode.IsCompleted || (mapName.EndsWith("Citadel") && atlasNode.IsFailedAttempt))) continue;
+                if (string.IsNullOrWhiteSpace(mapName) || atlasNode.Position == Vector2.Zero || atlasNode.IsInvalidMapStructure) continue;
+                if (Settings.HideCompletedMaps && (atlasNode.IsCompleted || atlasNode.IsFailedAttempt)) continue;
 
                 var textSize = ImGui.CalcTextSize(mapName);
                 var backgroundColor = Settings.MapGroups.Find(group => group.Maps.Exists(map => map.Equals(mapName, StringComparison.OrdinalIgnoreCase)))?.BackgroundColor ?? Settings.DefaultBackgroundColor;
@@ -168,6 +177,16 @@ namespace Atlas
 
                 if (!string.IsNullOrWhiteSpace(Search) && mapName.Contains(Search, StringComparison.OrdinalIgnoreCase))
                     drawList.AddLine(playerlocation, drawPosition, 0xFFFFFFFF);
+
+                if (Settings.TrackAbyssMaps && atlasNode.IsAbyss && (!Settings.TrackAbyssRevealedOnly || atlasNode.IsRevealed))
+                    drawList.AddLine(playerlocation, drawPosition, 0xFFFFFFFF);
+
+                //Debug
+                //var addressDebugPosition = (mapPosition - textSize / 2) + new Vector2(Settings.PositionOffsetX, Settings.PositionOffsetY + 20);
+                //drawList.AddText(addressDebugPosition, ImGuiHelper.Color(fontColor), atlasNode.Address.ToString("X"));
+
+                //var FlagDebugPosition = (mapPosition - textSize / 2) + new Vector2(Settings.PositionOffsetX, Settings.PositionOffsetY + 40);
+                //drawList.AddText(FlagDebugPosition, ImGuiHelper.Color(fontColor), Convert.ToString((uint)atlasNode.Flags, 2).PadLeft(32, '0'));
             }
         }
 
@@ -261,9 +280,9 @@ namespace Atlas
         {
             var nodes = new List<AtlasNode>();
 
-            var uiElement = Atlas.Read<UiElement>(Core.States.InGameStateObject.GameUi.Address);
+            var uiElement = Read<UiElement>(Core.States.InGameStateObject.GameUi.Address);
 
-            if (EnableControllerMode())
+            if (Core.GHSettings.EnableControllerMode)
             {
                 uiElement = uiElement.GetChild(17);
                 uiElement = uiElement.GetChild(2);
@@ -285,21 +304,6 @@ namespace Atlas
                 nodes.Add(uiElement.GetAtlasNode(i));
 
             return nodes;
-        }
-
-        private static bool EnableControllerMode()
-        {
-            var assembly = Assembly.Load("GameHelper");
-            var core = assembly.GetType("GameHelper.Core");
-            var ghSettingsProperty = core.GetProperty("GHSettings", BindingFlags.Static | BindingFlags.NonPublic);
-
-            if (ghSettingsProperty is null)
-                return false;
-
-            var ghSettingsInstance = ghSettingsProperty.GetValue(null);
-            var ghSettingsType = ghSettingsInstance.GetType();
-            var enableControllerModeField = ghSettingsType.GetField("EnableControllerMode", BindingFlags.Instance | BindingFlags.Public);
-            return (bool)enableControllerModeField.GetValue(ghSettingsInstance);
         }
 
         [DllImport("user32.dll")]

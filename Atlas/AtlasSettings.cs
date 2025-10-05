@@ -15,6 +15,9 @@ namespace Atlas
         public List<MapGroupSettings> MapGroups = [];
         public string GroupNameInput = string.Empty;
 
+        public bool TrackAbyssMaps = false;
+        public bool TrackAbyssRevealedOnly = true;
+
         public AtlasSettings()
         {
             var citadels = new MapGroupSettings("Citadels", new Vector4(1.0f, 0.0f, 0.0f, 0.4f), new Vector4(1.0f, 1.0f, 1.0f, 1.0f));

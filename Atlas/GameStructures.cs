@@ -24,35 +24,36 @@ namespace Atlas
         public readonly AtlasNode GetAtlasNode(int index)
         {
             var address = Atlas.Read<IntPtr>(FirstChild + (index * 0x8));
-            return Atlas.Read<AtlasNode>(address);
+            var atlasNode = Atlas.Read<AtlasNode>(address);
+            atlasNode.Address = address;
+            return atlasNode;
         }
     }
 
     [StructLayout(LayoutKind.Explicit, Pack = 1)]
     public struct AtlasNode
     {
+        [FieldOffset(0x0)] public IntPtr Address;
         [FieldOffset(0x110)] public Vector2 RelativePosition;
         [FieldOffset(0x12C)] public float Zoom;
+        [FieldOffset(0x1B9)] public AtlasNodeFogState FogFlags;
+        [FieldOffset(0x210)] public IntPtr InvalidMapAddress;
         [FieldOffset(0x270)] public IntPtr NodeNameAddress;
         [FieldOffset(0x290)] public AtlasNodeState Flags;
 
         public readonly float Scale => Zoom / 1.5f;
         public readonly Vector2 Position => RelativePosition * Scale;
 
+        public readonly bool IsConnected => Flags.HasFlag(AtlasNodeState.Connected);
         public readonly bool IsAttempted => Flags.HasFlag(AtlasNodeState.Attempted);
-        public readonly bool IsPristine => Flags.HasFlag(AtlasNodeState.Pristine);
-        public readonly bool IsWatchTower => Flags.HasFlag(AtlasNodeState.WatchTower);
-        public readonly bool HasCorruption => Flags.HasFlag(AtlasNodeState.Corruption);
-        public readonly bool HasBoss => Flags.HasFlag(AtlasNodeState.Boss);
-        public readonly bool HasBreach => Flags.HasFlag(AtlasNodeState.Breach);
-        public readonly bool HasExpedition => Flags.HasFlag(AtlasNodeState.Expedition);
-        public readonly bool HasDelirium => Flags.HasFlag(AtlasNodeState.Delirium);
-        public readonly bool HasRitual => Flags.HasFlag(AtlasNodeState.Ritual);
-        public readonly bool IsIrradiated => Flags.HasFlag(AtlasNodeState.Irradiated);
-        public readonly bool IsCompleted => IsAttempted && IsPristine;
-        public readonly bool IsFailedAttempt => IsAttempted && !IsPristine;
+        public readonly bool IsAbyss => Flags.HasFlag(AtlasNodeState.Abyss);
+        public readonly bool IsRevealed => FogFlags.HasFlag(AtlasNodeFogState.Revealed);
+        public readonly bool IsCompleted => IsAttempted && IsConnected;
+        public readonly bool IsFailedAttempt => IsAttempted && !IsConnected;
 
-        public string MapName
+        public readonly bool IsInvalidMapStructure { get { return InvalidMapAddress != IntPtr.Zero; } }
+
+        public readonly string MapName
         {
             get
             {
@@ -63,18 +64,18 @@ namespace Atlas
     }
 
     [Flags]
-    public enum AtlasNodeState : ushort
+    public enum AtlasNodeState : ulong
     {
         None = 0,
-        Attempted = 1 << 0,
-        Pristine = 1 << 1,
-        WatchTower = 1 << 2,
-        Corruption = 1 << 3,
-        Boss = 1 << 4,
-        Breach = 1 << 5,
-        Expedition = 1 << 6,
-        Delirium = 1 << 7,
-        Ritual = 1 << 8,
-        Irradiated = 1 << 9,
+        Connected = 1UL << 0,
+        Attempted = 1UL << 1,
+        Abyss = 1UL << 12,
+    }
+
+    [Flags]
+    public enum AtlasNodeFogState : ushort
+    {
+        None = 0,
+        Revealed = 1 << 3
     }
 }

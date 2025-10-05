@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -15,22 +15,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ImGui.NET" Version="1.90.9.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="ProcessMemoryUtilities.Net" Version="1.3.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="GameHelper">
-      <HintPath>Libs\GameHelper.dll</HintPath>
-    </Reference>
-    <Reference Include="GameOffsets">
-      <HintPath>Libs\GameOffsets.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\..\..\PoE 2 Tools\GameHelper2\GameHelper\GameHelper.csproj" />
+    <ProjectReference Include="..\..\..\PoE 2 Tools\GameHelper2\GameOffsets\GameOffsets.csproj" />
   </ItemGroup>
 
   <Target Name="CopyFiles" AfterTargets="Build">
-    <Copy SourceFiles="$(OutDir)$(TargetName)$(TargetExt); $(OutDir)$(TargetName).pdb;" DestinationFolder="..\GameHelper\$(OutDir)Plugins\$(ProjectName)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(OutDir)$(TargetName)$(TargetExt); $(OutDir)$(TargetName).pdb;" DestinationFolder="..\..\..\PoE 2 Tools\GameHelper2\GameHelper\$(OutDir)Plugins\$(ProjectName)" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>
