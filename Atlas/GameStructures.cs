@@ -17,14 +17,14 @@ namespace Atlas
 
         public readonly UiElement GetChild(int index)
         {
-            var address = Atlas.Read<IntPtr>(FirstChild + (index * 0x8));
-            return Atlas.Read<UiElement>(address);
+            var address = Reader.ReadMemory<IntPtr>(FirstChild + (index * 0x8));
+            return Reader.ReadMemory<UiElement>(address);
         }
 
         public readonly AtlasNode GetAtlasNode(int index)
         {
-            var address = Atlas.Read<IntPtr>(FirstChild + (index * 0x8));
-            var atlasNode = Atlas.Read<AtlasNode>(address);
+            var address = Reader.ReadMemory<IntPtr>(FirstChild + (index * 0x8));
+            var atlasNode = Reader.ReadMemory<AtlasNode>(address);
             atlasNode.Address = address;
             return atlasNode;
         }
@@ -44,21 +44,21 @@ namespace Atlas
         public readonly float Scale => Zoom / 1.5f;
         public readonly Vector2 Position => RelativePosition * Scale;
 
+        public readonly bool IsInvalid => InvalidMapAddress != IntPtr.Zero;
         public readonly bool IsConnected => Flags.HasFlag(AtlasNodeState.Connected);
         public readonly bool IsAttempted => Flags.HasFlag(AtlasNodeState.Attempted);
         public readonly bool IsAbyss => Flags.HasFlag(AtlasNodeState.Abyss);
         public readonly bool IsRevealed => FogFlags.HasFlag(AtlasNodeFogState.Revealed);
         public readonly bool IsCompleted => IsAttempted && IsConnected;
-        public readonly bool IsFailedAttempt => IsAttempted && !IsConnected;
-
-        public readonly bool IsInvalidMapStructure { get { return InvalidMapAddress != IntPtr.Zero; } }
+        public readonly bool IsFailed => IsAttempted && !IsConnected;
+        public readonly bool IsDone => IsCompleted || IsFailed;
 
         public readonly string MapName
         {
             get
             {
-                var address = Atlas.Read<IntPtr>(NodeNameAddress + 0x8);
-                return Atlas.ReadWideString(address, 64);
+                var address = Reader.ReadMemory<IntPtr>(NodeNameAddress + 0x8);
+                return Reader.ReadWideString(address, 64);
             }
         }
     }

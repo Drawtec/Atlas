@@ -20,12 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\PoE 2 Tools\GameHelper2\GameHelper\GameHelper.csproj" />
-    <ProjectReference Include="..\..\..\PoE 2 Tools\GameHelper2\GameOffsets\GameOffsets.csproj" />
+    <ProjectReference Include="..\..\GameHelperCommunity2\GameHelper\GameHelper.csproj" />
+    <ProjectReference Include="..\..\GameHelperCommunity2\GameOffsets\GameOffsets.csproj" />
   </ItemGroup>
 
   <Target Name="CopyFiles" AfterTargets="Build">
-    <Copy SourceFiles="$(OutDir)$(TargetName)$(TargetExt); $(OutDir)$(TargetName).pdb;" DestinationFolder="..\..\..\PoE 2 Tools\GameHelper2\GameHelper\$(OutDir)Plugins\$(ProjectName)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="$(OutDir)$(TargetName)$(TargetExt); $(OutDir)$(TargetName).pdb;" DestinationFolder="..\..\GameHelperCommunity2\GameHelper\$(OutDir)win-x64\Plugins\$(ProjectName)" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

@@ -143,14 +143,13 @@ namespace Atlas
 
         public override void DrawUI()
         {
-            var isGameHelperForeground = Process.GetCurrentProcess().MainWindowHandle == GetForegroundWindow();
-            if (!Core.Process.Foreground && !isGameHelperForeground) return;
-
-            if (ProcessHandle == 0)
-                ProcessHandle = ProcessMemoryUtilities.Managed.NativeWrapper.OpenProcess(ProcessMemoryUtilities.Native.ProcessAccessFlags.Read, (int)Core.Process.Pid);
+            var isGameHelperForeground = Process.GetCurrentProcess().MainWindowHandle == Reader.GetForegroundWindow();
+            if (!Core.Process.Foreground && !isGameHelperForeground)
+                return;
 
             var player = Core.States.InGameStateObject.CurrentAreaInstance.Player;
-            if (!player.TryGetComponent<Render>(out var playerRender)) return;
+            if (!player.TryGetComponent<Render>(out var playerRender))
+                return;
 
             var drawList = ImGui.GetBackgroundDrawList();
             var atlasNodes = GetAtlasNodes();
@@ -159,8 +158,8 @@ namespace Atlas
             foreach (var atlasNode in atlasNodes)
             {
                 var mapName = atlasNode.MapName;
-                if (string.IsNullOrWhiteSpace(mapName) || atlasNode.Position == Vector2.Zero || atlasNode.IsInvalidMapStructure) continue;
-                if (Settings.HideCompletedMaps && (atlasNode.IsCompleted || atlasNode.IsFailedAttempt)) continue;
+                if (string.IsNullOrWhiteSpace(mapName) || atlasNode.Position == Vector2.Zero || atlasNode.IsInvalid) continue;
+                if (Settings.HideCompletedMaps && atlasNode.IsDone) continue;
 
                 var textSize = ImGui.CalcTextSize(mapName);
                 var backgroundColor = Settings.MapGroups.Find(group => group.Maps.Exists(map => map.Equals(mapName, StringComparison.OrdinalIgnoreCase)))?.BackgroundColor ?? Settings.DefaultBackgroundColor;
@@ -171,8 +170,10 @@ namespace Atlas
                 var padding = new Vector2(5, 2);
                 var bgPos = drawPosition - padding;
                 var bgSize = textSize + padding * 2;
+                var rounding = 3.0f;
 
-                drawList.AddRectFilled(bgPos, bgPos + bgSize, ImGuiHelper.Color(backgroundColor));
+                drawList.AddRect(bgPos, bgPos + bgSize, ImGuiHelper.Color(fontColor), rounding, ImDrawFlags.RoundCornersAll, 1.0f);
+                drawList.AddRectFilled(bgPos, bgPos + bgSize, ImGuiHelper.Color(backgroundColor), rounding);
                 drawList.AddText(drawPosition, ImGuiHelper.Color(fontColor), mapName);
 
                 if (!string.IsNullOrWhiteSpace(Search) && mapName.Contains(Search, StringComparison.OrdinalIgnoreCase))
@@ -256,31 +257,11 @@ namespace Atlas
         // ==================================================
         // TEMPORARY CODE
         // ==================================================
-        public static IntPtr ProcessHandle { get; set; }
-
-        public static T Read<T>(IntPtr address) where T : unmanaged
-        {
-            if (address == IntPtr.Zero) return default;
-
-            T result = default;
-            ProcessMemoryUtilities.Managed.NativeWrapper.ReadProcessMemory(ProcessHandle, address, ref result);
-            return result;
-        }
-
-        public static string ReadWideString(nint address, int stringLength)
-        {
-            if (address == IntPtr.Zero || stringLength <= 0) return string.Empty;
-
-            byte[] result = new byte[stringLength * 2];
-            ProcessMemoryUtilities.Managed.NativeWrapper.ReadProcessMemoryArray(ProcessHandle, address, result);
-            return Encoding.Unicode.GetString(result).Split('\0')[0];
-        }
-
         private static List<AtlasNode> GetAtlasNodes()
         {
             var nodes = new List<AtlasNode>();
 
-            var uiElement = Read<UiElement>(Core.States.InGameStateObject.GameUi.Address);
+            var uiElement = Reader.ReadMemory<UiElement>(Core.States.InGameStateObject.GameUi.Address);
 
             if (Core.GHSettings.EnableControllerMode)
             {
@@ -305,8 +286,5 @@ namespace Atlas
 
             return nodes;
         }
-
-        [DllImport("user32.dll")]
-        private static extern nint GetForegroundWindow();
     }
 }
