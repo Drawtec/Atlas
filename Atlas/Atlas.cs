@@ -265,12 +265,24 @@ namespace Atlas
 
             if (Core.GHSettings.EnableControllerMode)
             {
-                uiElement = uiElement.GetChild(17);
-                uiElement = uiElement.GetChild(2);
-                uiElement = uiElement.GetChild(3);
-                uiElement = uiElement.GetChild(0);
-                uiElement = uiElement.GetChild(0);
-                uiElement = uiElement.GetChild(6);
+                if (uiElement.Length > 62)
+                {
+                    uiElement = uiElement.GetChild(23);
+                    uiElement = uiElement.GetChild(2);
+                    uiElement = uiElement.GetChild(3);
+                    uiElement = uiElement.GetChild(0);
+                    uiElement = uiElement.GetChild(0);
+                    uiElement = uiElement.GetChild(6);
+                }
+                else
+                {
+                    uiElement = uiElement.GetChild(17);
+                    uiElement = uiElement.GetChild(2);
+                    uiElement = uiElement.GetChild(3);
+                    uiElement = uiElement.GetChild(0);
+                    uiElement = uiElement.GetChild(0);
+                    uiElement = uiElement.GetChild(6);
+                }
             }
             else
             {

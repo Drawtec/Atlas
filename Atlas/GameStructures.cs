@@ -34,6 +34,7 @@ namespace Atlas
     public struct AtlasNode
     {
         [FieldOffset(0x0)] public IntPtr Address;
+        [FieldOffset(0xE0)] public float Scale;
         [FieldOffset(0x110)] public Vector2 RelativePosition;
         [FieldOffset(0x12C)] public float Zoom;
         [FieldOffset(0x1B9)] public AtlasNodeFogState FogFlags;
@@ -41,7 +42,7 @@ namespace Atlas
         [FieldOffset(0x270)] public IntPtr NodeNameAddress;
         [FieldOffset(0x290)] public AtlasNodeState Flags;
 
-        public readonly float Scale => Zoom / 1.5f;
+        //public readonly float Scale => Zoom / 1.5f;
         public readonly Vector2 Position => RelativePosition * Scale;
 
         public readonly bool IsInvalid => InvalidMapAddress != IntPtr.Zero;
